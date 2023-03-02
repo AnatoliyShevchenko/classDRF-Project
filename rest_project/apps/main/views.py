@@ -19,16 +19,21 @@ from abstracts.mixins import (
     ObjectMixin,
     ResponseMixin
 )
+from abstracts.decorators import performance_counter
 from .models import Player
 from .serializers import (
     PlayerCreateSerializer,
     PlayerSerializer
 )
+from .permissions import MainPermission
 
 
 class MainViewSet(ResponseMixin, ObjectMixin, ViewSet):
     """MainViewSet."""
 
+    permission_classes: tuple = (
+        MainPermission,
+    )
     queryset = Player.objects.all()
 
     @action(
@@ -50,6 +55,7 @@ class MainViewSet(ResponseMixin, ObjectMixin, ViewSet):
             )
         return self.get_json_response(serializer.data, 'players')
 
+    @performance_counter
     def list(self, request: Request) -> Response:
         """GET method."""
 
