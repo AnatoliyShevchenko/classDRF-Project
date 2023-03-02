@@ -11,7 +11,7 @@ from django.urls import (
 )
 
 # First party
-from main.views import MainView
+from main.views import MainViewSet
 
 
 urlpatterns = [
@@ -31,7 +31,7 @@ if settings.DEBUG:
 router: DefaultRouter = DefaultRouter(
     trailing_slash=True
 )
-router.register('main', MainView)
+router.register('main', MainViewSet)
 
 urlpatterns += [
     path('api/v1/', include(router.urls))

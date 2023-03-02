@@ -1,121 +1,142 @@
+# Python
+from typing import (
+    Any,
+    Optional
+)
+
 # DRF
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+
 # Django
-from django.db.models import QuerySet
+from django.db.models.query import QuerySet
+
 # Local
-from .models import Player
-from .mixins import SomeMixin
-from .serializers import (
-    PlayerSerializer, 
-    PlayerDetailSerializer,
+from abstracts.mixins import (
+    ObjectMixin,
+    ResponseMixin
 )
-# Python
-from typing import Optional
+from .models import Player
+from .serializers import (
+    PlayerCreateSerializer,
+    PlayerSerializer
+)
 
 
-class MainView(ViewSet, SomeMixin):
-    """MainView."""
+class MainViewSet(ResponseMixin, ObjectMixin, ViewSet):
+    """MainViewSet."""
 
     queryset = Player.objects.all()
 
+    @action(
+        methods=['get'],
+        detail=False,
+        url_path='get-players',
+        permission_classes=(AllowAny,)
+    )
+    def get_players(self, request: Request) -> Response:
+        """GET method."""
+
+        players: QuerySet[Player] = \
+            self.queryset.filter(power__lte=20)
+
+        serializer: PlayerSerializer = \
+            PlayerSerializer(
+                players,
+                many=True
+            )
+        return self.get_json_response(serializer.data, 'players')
+
     def list(self, request: Request) -> Response:
-        """GET Method. get all objects."""
+        """GET method."""
+
         players: QuerySet[Player] = self.queryset.all()
         serializer: PlayerSerializer = \
-        PlayerSerializer(
-            players,
-            many=True
+            PlayerSerializer(
+                players,
+                many=True
+            )
+        return self.get_json_response(serializer.data, 'players')
+
+    def retrieve(self, request: Request, pk: str) -> Response:
+        """GET method."""
+
+        player: Optional[Player] = self.get_object(
+            self.queryset,
+            pk
         )
-        return Response(
+        if not player:
+            return self.get_json_response('No such player', 'error')
+        return self.get_json_response(
             {
-                'Players': serializer.data
+                'name': player.name,
+                'surname': player.surname,
+                'power': player.power,
+                'age': player.age
             }
         )
 
-    def retrieve(self, request: Request, pk: str) -> Response:
-        """GET Method. get some object."""
-
-        player: Optional[Player] = None
-        player: Optional[Player] = \
-            self.get_and_return_player(
-                int(pk)
-            )
-        if not player:
-            return Response('error')
-
-        return Response('success')
-
     def create(self, request: Request) -> Response:
-        data = self.create_object(request)
-        if data:
-            return Response({
-                'data' : 'success'
-            })
-        return Response({
-            'error' : 'error'
-        })
+        """POST method."""
+
+        serializer: PlayerCreateSerializer = \
+            PlayerCreateSerializer(
+                data=request.data
+            )
+        if not serializer.is_valid():
+            return self.get_json_response(serializer.errors, 'data')
+        player: Player = serializer.save()
+        return self.get_json_response(player.fullname, 'players')
 
     def update(self, request: Request, pk: str) -> Response:
-        player = Player.objects.get(id=pk)
-        try:
-            player = self.queryset.get(
-                id=pk
-            )
-            serializer: PlayerDetailSerializer = \
-            PlayerDetailSerializer(player)
-        except Player.DoesNotExist:
-            return Response({
-                'message': 'error'
-            })
-        else:
-            serializer = PlayerSerializer(player, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({
-                    "message" : "ok"
-                })
-            return Response({
-                "error" : serializer.errors
-            })
+        """POST method."""
+
+        player: Optional[Player] = self.get_object(
+            self.queryset,
+            pk
+        )
+        if not player:
+            return self.get_json_response('No such player', 'error')
+        serializer: PlayerSerializer = PlayerSerializer(
+            player,
+            data=request.data
+        )
+        if not serializer.is_valid():
+            return self.get_json_response(serializer.errors, 'error')
+        serializer.save()
+        return self.get_json_response('Updated', 'success')
 
     def partial_update(self, request: Request, pk: str) -> Response:
-        player = Player.objects.get(id=pk)
-        try:
-            player = self.queryset.get(
-                id=pk
-            )
-            serializer: PlayerDetailSerializer = \
-            PlayerDetailSerializer(player)
-        except Player.DoesNotExist:
-            return Response({
-                'message': 'error'
-            })
-        else:
-            serializer = PlayerSerializer(
-                player, 
-                data=request.data, 
-                partial=True
-            )
-            if serializer.is_valid():
-                serializer.save()
-                return Response({
-                    "message" : "ok"
-                })
-            return Response({
-                "error" : serializer.errors
-            })
+        """POST method."""
+
+        player: Optional[Player] = self.get_object(
+            self.queryset,
+            pk
+        )
+        if not player:
+            return self.get_json_response('No such player', 'error')
+
+        serializer: PlayerSerializer = PlayerSerializer(
+            player,
+            data=request.data,
+            partial=True
+        )
+        if not serializer.is_valid():
+            return self.get_json_response(serializer.errors, 'error')
+        serializer.save()
+        return self.get_json_response('Partially Updated', 'success')
 
     def destroy(self, request: Request, pk: str) -> Response:
-        player = Player.objects.get(id=pk)
-        try:
-            player = self.queryset.get(id=pk)
-            player.delete()
-            return Response({
-                'message' : "ok"
-            })
-        except Player.DoesNotExist:
-            return Response({
-                'error': 'Player Does Not Exist'
-            })
+        """DELETE method."""
+
+        player: Optional[Player] = self.get_object(
+            self.queryset,
+            pk
+        )
+        if not player:
+            return self.get_json_response('No such player', 'error')
+        player.delete()
+        return self.get_json_response('Player deleted', 'error')
