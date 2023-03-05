@@ -17,6 +17,7 @@ from django.urls import (
 
 # First party
 from main.views import MainViewSet
+from school.views import StudentsViewSet, TeacherViewSet
 
 
 urlpatterns = [
@@ -37,6 +38,8 @@ router: DefaultRouter = DefaultRouter(
     trailing_slash=True
 )
 router.register('main', MainViewSet)
+router.register('students', StudentsViewSet)
+router.register('teachers', TeacherViewSet)
 
 urlpatterns += [
     path('api/v1/', include(router.urls))

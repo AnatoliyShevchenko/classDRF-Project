@@ -7,7 +7,6 @@ from django.contrib.auth.models import (
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
-from django.db.models import QuerySet
 
 from typing import Any
 
@@ -73,6 +72,14 @@ class Client(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(
         default=False,
         verbose_name='менеджер'
+    )
+    is_teacher = models.BooleanField(
+        default=False,
+        verbose_name='учитель'
+    )
+    is_student = models.BooleanField(
+        default=False,
+        verbose_name='ученик'
     )
     date_joined = models.DateTimeField(
         default=timezone.now,

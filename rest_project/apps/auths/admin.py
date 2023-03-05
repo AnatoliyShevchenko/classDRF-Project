@@ -35,6 +35,8 @@ class ClientAdmin(UserAdmin):
                 'is_superuser',
                 'is_staff',
                 'is_active',
+                'is_teacher',
+                'is_student'
             )
         }),
     )
@@ -50,7 +52,9 @@ class ClientAdmin(UserAdmin):
                 'email',
                 'password1',
                 'password2',
-                'is_active'
+                'is_active',
+                'is_teacher',
+                'is_student'
             ),
         }),
     )
@@ -69,7 +73,9 @@ class ClientAdmin(UserAdmin):
         'date_joined',
         'is_superuser',
         'is_staff',
-        'is_active'
+        'is_active',
+        'is_student',
+        'is_teacher'
     )
     list_filter = (
         'email',
